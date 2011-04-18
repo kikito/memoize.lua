@@ -44,3 +44,5 @@ local function memoize(f)
   end
 end
 
+return memoize
+

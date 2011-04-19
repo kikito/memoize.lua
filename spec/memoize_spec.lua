@@ -6,10 +6,16 @@ context( 'memoize', function()
 
   local function count(...)
     counter = counter + 1
-    return counter
   end
 
   local memoized_count = memoize(count)
+
+  local function switch(x,y)
+    counter = counter + 1
+    return y,x
+  end
+
+  local memoized_switch = memoize(switch)
 
   before(function() counter = 0 end)
 
@@ -44,6 +50,17 @@ context( 'memoize', function()
     local another_t = {}
     memoized_count(print, another_t)
     assert_equal(counter, 2)
+  end)
+
+  test("should return multiple values when needed", function()
+    local x,y = memoized_switch(100, 200)
+    assert_equal(count, 1)
+    assert_equal(x, 200)
+    assert_equal(y, 100)
+    x,y = memoized_switch(100, 200)
+    assert_equal(count, 1)
+    assert_equal(x, 200)
+    assert_equal(y, 100)
   end)
 
 end)

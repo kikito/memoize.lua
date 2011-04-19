@@ -13,19 +13,21 @@ local function getFromCache(cache, args)
   local node = cache
   for i=1, #args do
     arg = args[i]
+    node.children = node.children or {}
     node = node.children[arg]
     if node == nil then return nil end
   end
   return node.value
 end
 
-local insertInCache(cache, args, result)
+local function insertInCache(cache, args, result)
   local arg, i
   local node = cache
   for i=1, #args do
     arg = args[i]
     node.children = node.children or {}
     node.children[arg] = node.children[arg] or {}
+    node = node.children[arg]
   end
   node.value = result
 end

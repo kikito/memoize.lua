@@ -1,0 +1,59 @@
+h1. memoize.lua
+
+This is a pura-Lua memoization function that builds upon what was shown in "Programming In Lua's memoization implementation":http://www.lua.org/pil/17.1.html function.
+
+Main characteristics:
+
+* Caches the results based on multiple parameters instead of just 1.
+* Doesn't rely on tostring; instead, it uses operator == on all the parameters (this is accomplished by structuring the cache in a tree-like structure, where each tree node corresponds to one parameter).
+* Works correctly with functions returning multiple values, i.e. x,y = getPosition()
+
+Partially inspired by "this StackOverflow question":http://stackoverflow.com/questions/129877/how-do-i-write-a-generic-memoize-function
+
+h1. Example of use
+
+``` lua
+function triangle(x)
+  if x == 0 then return 0 end
+  return x+triangle(x-1)
+end
+
+print(triangle(40000)) -- stack overflow: too much recursion
+
+local memoize = require 'memoize'
+
+triangle = memoize(triangle) -- make triangle memoized, so it "remembers" previous results
+
+for i=0, 40000 do triangle(i) end -- seed triangle's cache
+
+print(triangle(40000)) -- 800020000, instantaneous result
+
+```
+
+h1. Gotchas
+
+* This function will not cache functions that return nil; it uses the result of the function to determine the cache hit or miss. If you need to cache a function that doesn't return anything, make it return a dummy not-nil value. Any non-nil value will work.
+* This function does not use weak tables for storing values; the memory devoted to memoizing is thus not-recuperable. If you are going to use this function extensively, you might want to modify insertInCache so that it uses weak tables.
+* There's a small linear performance & memory penalty for every additional parameter used. Try to keep the parameter numbers low.
+
+h1. Installation
+
+Just copy the memoize.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
+
+Remember to store the value returned by require somewhere! (I suggest a local variable named memoize)
+
+``` lua
+local memoize = require 'memoize'
+
+```
+
+h1. Specs
+
+This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just enter the spec folder and execute run.lua:
+
+```
+cd path/to/memoize.lua
+lua run.lua
+```
+
+

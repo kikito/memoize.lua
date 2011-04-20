@@ -10,7 +10,9 @@ Main characteristics:
 
 Partially inspired by "this StackOverflow question":http://stackoverflow.com/questions/129877/how-do-i-write-a-generic-memoize-function
 
-h1. Example of use
+h1. Examples of use
+
+@memoize.lua@ can be used to avoid stack overflow & slow performance on recursive functions, in exchange for memory. In some cases it might be necessary to `seed the function` before using it.
 
 ``` lua
 function triangle(x)
@@ -30,11 +32,59 @@ print(triangle(40000)) -- 800020000, instantaneous result
 
 ```
 
-h1. Gotchas
+Another use for @memoize.lua@ is on resource-loading functions. Let's say you have an image-loading function called @load_image@. You'd like to use the image loaded by that function on two different places in your code, but you are unsure of which of those places will call @load_image@ first; and you don't want to load two images.
 
-* This function will not cache functions that return nil; it uses the result of the function to determine the cache hit or miss. If you need to cache a function that doesn't return anything, make it return a dummy not-nil value. Any non-nil value will work.
-* This function does not use weak tables for storing values; the memory devoted to memoizing is thus not-recuperable. If you are going to use this function extensively, you might want to modify insertInCache so that it uses weak tables.
-* There's a small linear performance & memory penalty for every additional parameter used. Try to keep the parameter numbers low.
+``` lua
+function load_image(path)
+  ...
+  return image
+end
+
+function f()
+  local image = load_image(path)
+  ...
+end
+
+function g()
+  local image = load_image(path)
+  ...
+end
+```
+
+You can just memoize load_image; the image will be loaded the first time load_image is called, and will be recovered from the cache on subsequent calls.
+
+``` lua
+local memoize = require 'memoize'
+
+function load_image(path)
+  ...
+  return image
+end
+
+load_image = memoize(load_image)
+
+function f()
+  local image = load_image(path)
+  ...
+end
+
+function g()
+  local image = load_image(path)
+  ...
+end
+
+
+```
+
+
+
+
+
+h1. Gotchas / Warnings
+
+* *nil return values are considered cache-misses and thus are never cached*; If you need to cache a function that doesn't return anything, make it return a dummy not-nil value (false, '', 0 or any other non-nil value will work just fine).
+* This function *does not use weak tables* for caching; the memory devoted to memoizing is thus not-recuperable until the program halts/stops. If you are going to use this function extensively, you might want to modify insertInCache so that it uses weak tables.
+* There's a (small) linear performance & memory penalty for every additional parameter used. *Try to keep the parameter numbers low*.
 
 h1. Installation
 
@@ -46,6 +96,8 @@ Remember to store the value returned by require somewhere! (I suggest a local va
 local memoize = require 'memoize'
 
 ```
+
+Also, make sure to read the license file; the text of that license file must appear somewhere in your projects' files.
 
 h1. Specs
 

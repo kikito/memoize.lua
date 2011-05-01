@@ -11,6 +11,9 @@ context( 'memoize', function()
 
   local memoized_count = memoize(count)
 
+  local countable = setmetatable({}, {__call = count})
+  local memoized_countable = memoize(countable)
+
   local function switch(x,y)
     counter = counter + 1
     return y,x
@@ -19,6 +22,15 @@ context( 'memoize', function()
   local memoized_switch = memoize(switch)
 
   before(function() counter = 0 end)
+
+  test("should accept ony non-callable parameters, and error otherwise", function()
+    assert_error(function() memoize() end)
+    assert_error(function() memoize('foo') end)
+    assert_error(function() memoize(1) end)
+    assert_error(function() memoize({}) end)
+    assert_not_error(function() memoize(print) end)
+    assert_not_error(function() memoize(countable) end)
+  end)
 
   test("should work with 0 parameters", function()
     memoized_count()
@@ -79,5 +91,22 @@ context( 'memoize', function()
     memoize(count)
     assert_equal(memoized_count('reset'), 2)
   end)
+
+
+  context( 'callable tables', function()
+    
+    test("Unchanged callable tables should work just like functions", function()
+      memoized_countable()
+      assert_equal(memoized_countable(), 1)
+      assert_equal(counter, 1)
+      memoized_countable('foo')
+      assert_equal(memoized_countable('foo'), 2)
+      assert_equal(counter, 2)
+    end)
+
+
+  end)
+
+
 
 end)

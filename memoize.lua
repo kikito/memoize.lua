@@ -34,6 +34,18 @@ y = memoizedSlowFunc('c','d') -- fast
 
 local globalCache = {}
 
+local function isCallable(f)
+  local tf = type(f)
+  if tf == 'function' then return true end
+  if tf == 'table' then
+    local mt = getmetatable(f)
+    if type(mt)=='table' then
+      return type(mt.__call) == "function"
+    end
+  end
+  return false
+end
+
 local function getFromCache(cache, args)
   local node = cache
   for i=1, #args do
@@ -60,6 +72,7 @@ end
 -- public function
 
 local function memoize(f)
+  assert(isCallable(f), "Only functions and callable tables are admitted on memoize. Received " .. tostring(f))
   globalCache[f] = { results = {} }
   return function (...)
     local results = getFromCache( globalCache[f], {...} )

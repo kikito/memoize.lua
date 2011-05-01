@@ -73,4 +73,11 @@ context( 'memoize', function()
     assert_equal(counter, 2)
   end)
 
+  test("should clean cache when called twice", function()
+    memoized_count('reset')
+    assert_equal(memoized_count('reset'), 1)
+    memoize(count)
+    assert_equal(memoized_count('reset'), 2)
+  end)
+
 end)

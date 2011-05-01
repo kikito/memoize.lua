@@ -79,6 +79,16 @@ end
 h1. Gotchas / Warnings
 
 * *nil return values are considered cache-misses and thus are never cached*; If you need to cache a function that doesn't return anything, make it return a dummy not-nil value (false, '', 0 or any other non-nil value will work just fine).
+* If you need to liberate the memory used by a memoized function, memoize it again:
+
+<pre>
+mf = memoize(f);
+mf(1)
+mf(2)
+mf(3)
+memoize(f) -- this cleans up the cache
+</pre>
+
 * This function *does not use weak tables* for caching; the memory devoted to memoizing is thus not-recuperable until the program halts/stops. If you are going to use this function extensively, you might want to modify insertInCache so that it uses weak tables.
 * There's a (small) linear performance & memory penalty for every additional parameter used. *Try to keep the parameter numbers low*.
 

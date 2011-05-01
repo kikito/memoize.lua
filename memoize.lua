@@ -34,16 +34,35 @@ y = memoizedSlowFunc('c','d') -- fast
 
 local globalCache = {}
 
+local function getCallMetamethod(f)
+  if type(f) ~= 'table' then return nil end
+  local mt = getmetatable(f)
+  return type(mt)=='table' and mt.__call
+end
+
 local function isCallable(f)
   local tf = type(f)
   if tf == 'function' then return true end
   if tf == 'table' then
-    local mt = getmetatable(f)
-    if type(mt)=='table' then
-      return type(mt.__call) == "function"
-    end
+    return type(getCallMetamethod(f))=="function"
   end
   return false
+end
+
+local function assertCallable(f)
+  assert(isCallable(f), "Only functions and callable tables are admitted on memoize. Received " .. tostring(f))
+end
+
+local function resetCache(f, call)
+  globalCache[f] = { results = {}, call = call or getCallMetamethod(f) }
+end
+
+local function resetCacheIfMetamethodChanged(t)
+  local call = getCallMetamethod(t)
+  assert(type(call) == "function", "The __call metamethod must be a function") 
+  if globalCache[t].call ~= call then
+    resetCache(t, call)
+  end
 end
 
 local function getFromCache(cache, args)
@@ -56,8 +75,8 @@ local function getFromCache(cache, args)
   return node.results
 end
 
-local function insertInCache(cache, args, results)
-  local arg, i
+local function getOrBuildCacheNode(cache, args)
+  local arg
   local node = cache
   for i=1, #args do
     arg = args[i]
@@ -65,18 +84,21 @@ local function insertInCache(cache, args, results)
     node.children[arg] = node.children[arg] or {}
     node = node.children[arg]
   end
+  return node
+end
+
+local function insertInCache(cache, args, results)
+  local node = getOrBuildCacheNode(cache, args)
   node.results = results
 end
 
-
--- public function
-
-local function memoize(f)
-  assert(isCallable(f), "Only functions and callable tables are admitted on memoize. Received " .. tostring(f))
-  globalCache[f] = { results = {} }
+local function buildMemoizedFunction(f)
+  local tf = type(f)
   return function (...)
+    if tf == "table" then resetCacheIfMetamethodChanged(f) end
+
     local results = getFromCache( globalCache[f], {...} )
-      
+
     if #results == 0 then
       results = { f(...) }
       insertInCache(globalCache[f], {...}, results)
@@ -84,6 +106,14 @@ local function memoize(f)
     
     return unpack(results)
   end
+end
+
+-- public function
+
+local function memoize(f)
+  assertCallable(f)
+  resetCache(f)
+  return buildMemoizedFunction(f)
 end
 
 return memoize

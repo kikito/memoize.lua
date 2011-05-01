@@ -1,4 +1,4 @@
-local memoize = require 'memoize' 
+local memoize = require 'memoize'
 
 context( 'memoize', function()
 
@@ -11,9 +11,6 @@ context( 'memoize', function()
 
   local memoized_count = memoize(count)
 
-  local countable = setmetatable({}, {__call = count})
-  local memoized_countable = memoize(countable)
-
   local function switch(x,y)
     counter = counter + 1
     return y,x
@@ -21,7 +18,17 @@ context( 'memoize', function()
 
   local memoized_switch = memoize(switch)
 
-  before(function() counter = 0 end)
+  local countable = setmetatable({}, {__call = count})
+  local memoized_countable = memoize(countable)
+
+  local function count2(...)
+    counter = counter + 1
+    return counter
+  end
+
+  before(function()
+    counter = 0
+  end)
 
   test("should accept ony non-callable parameters, and error otherwise", function()
     assert_error(function() memoize() end)
@@ -92,7 +99,6 @@ context( 'memoize', function()
     assert_equal(memoized_count('reset'), 2)
   end)
 
-
   context( 'callable tables', function()
     
     test("Unchanged callable tables should work just like functions", function()
@@ -104,9 +110,21 @@ context( 'memoize', function()
       assert_equal(counter, 2)
     end)
 
+    test("When callable table's __call metamethod is changed, the cache is reset", function()
+      memoized_countable('bar')
+      assert_equal(memoized_countable('bar'), 1)
+      local mt = getmetatable(countable)
+      mt.__call = count2
+      memoized_countable('bar')
+      assert_equal(memoized_countable('bar'), 2)
+      assert_equal(memoized_countable('bar'), 2)
+    end)
 
+    test("An error is thrown if a memoized callable table loses its __call", function()
+      local mt = getmetatable(countable)
+      mt.__call = nil
+      assert_error(function() memoized_countable() end)
+    end)
   end)
-
-
 
 end)

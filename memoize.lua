@@ -40,21 +40,38 @@ local function getCallMetamethod(f)
   return type(mt)=='table' and mt.__call
 end
 
-local function isCallable(f)
-  local tf = type(f)
-  if tf == 'function' then return true end
-  if tf == 'table' then
-    return type(getCallMetamethod(f))=="function"
-  end
-  return false
-end
-
-local function assertCallable(f)
-  assert(isCallable(f), "Only functions and callable tables are admitted on memoize. Received " .. tostring(f))
-end
-
 local function resetCache(f, call)
-  globalCache[f] = { results = {}, call = call or getCallMetamethod(f) }
+  globalCache[f] = { results = {}, children = {}, call = call or getCallMetamethod(f) }
+end
+
+local function getCacheNode(cache, args)
+  local node = cache
+  for i=1, #args do
+    node = node.children[args[i]]
+    if not node then return nil end
+  end
+  return node
+end
+
+local function getOrBuildCacheNode(cache, args)
+  local arg
+  local node = cache
+  for i=1, #args do
+    arg = args[i]
+    node.children[arg] = node.children[arg] or { children = {} }
+    node = node.children[arg]
+  end
+  return node
+end
+
+local function getFromCache(cache, args)
+  local node = getCacheNode(cache, args)
+  return node and node.results or {}
+end
+
+local function insertInCache(cache, args, results)
+  local node = getOrBuildCacheNode(cache, args)
+  node.results = results
 end
 
 local function resetCacheIfMetamethodChanged(t)
@@ -63,33 +80,6 @@ local function resetCacheIfMetamethodChanged(t)
   if globalCache[t].call ~= call then
     resetCache(t, call)
   end
-end
-
-local function getFromCache(cache, args)
-  local node = cache
-  for i=1, #args do
-    if not node.children then return {} end
-    node = node.children[args[i]]
-    if not node then return {} end
-  end
-  return node.results
-end
-
-local function getOrBuildCacheNode(cache, args)
-  local arg
-  local node = cache
-  for i=1, #args do
-    arg = args[i]
-    node.children = node.children or {}
-    node.children[arg] = node.children[arg] or {}
-    node = node.children[arg]
-  end
-  return node
-end
-
-local function insertInCache(cache, args, results)
-  local node = getOrBuildCacheNode(cache, args)
-  node.results = results
 end
 
 local function buildMemoizedFunction(f)
@@ -106,6 +96,19 @@ local function buildMemoizedFunction(f)
     
     return unpack(results)
   end
+end
+
+local function isCallable(f)
+  local tf = type(f)
+  if tf == 'function' then return true end
+  if tf == 'table' then
+    return type(getCallMetamethod(f))=="function"
+  end
+  return false
+end
+
+local function assertCallable(f)
+  assert(isCallable(f), "Only functions and callable tables are admitted on memoize. Received " .. tostring(f))
 end
 
 -- public function

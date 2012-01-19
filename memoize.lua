@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- memoize.lua - v1.1 (2011-05)
+-- memoize.lua - v1.2 (2012-01)
 -- Enrique García Cota - enrique.garcia.cota [AT] gmail [DOT] com
 -- memoize lua functions easily
 -- Inspired by http://stackoverflow.com/questions/129877/how-do-i-write-a-generic-memoize-function

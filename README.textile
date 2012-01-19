@@ -106,11 +106,10 @@ Also, make sure to read the license file; the text of that license file must app
 
 h1. Specs
 
-This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just enter the spec folder and execute run.lua:
+This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just enter the spec folder and execute tsc:
 
 <pre>
-cd path/to/memoize.lua
-lua run.lua
+tsc spec/*
 </pre>
 
 

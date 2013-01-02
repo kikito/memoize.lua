@@ -1,5 +1,7 @@
 h1. memoize.lua
 
+!https://travis-ci.org/kikito/memoize.lua.png?branch=master!:https://travis-ci.org/kikito/memoize.lua
+
 This is a pura-Lua memoization function that builds upon what was shown in "Programming In Lua's memoization implementation":http://www.lua.org/pil/17.1.html function.
 
 Main characteristics:

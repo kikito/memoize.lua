@@ -34,8 +34,10 @@ z = memoizedSlowFunc('e','f') -- slow
 y = memoizedSlowFunc('c','d') -- fast
 ]]
 
--- private stuff
+-- Lua 5.3 compatibility
+local unpack = unpack or table.unpack
 
+-- private stuff
 local globalCache = {}
 
 local function getCallMetamethod(f)

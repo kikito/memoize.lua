@@ -19,7 +19,7 @@ Main characteristics:
 
 Partially inspired by [this StackOverflow question](http://stackoverflow.com/questions/129877/how-do-i-write-a-generic-memoize-function)
 
-Sinopsis
+Synopsis
 ========
 
 ``` lua

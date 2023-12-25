@@ -187,6 +187,30 @@ describe('memoize', function()
       assert.equal(4, mlen('a', 'b', 'c', 'd'))
       assert.equal(11, counter)
     end)
-  end)
 
-end)
+    it("invalidates based on an optional validator", function()
+      local cache = {}
+      function cache:validator(current_validity)
+       if not current_validity then
+	return 3
+       elseif current_validity == 0 then
+	return nil
+       end
+       return current_validity - 1
+      end
+      local mlen = memoize(len, cache)
+
+      assert.equal(1, mlen('a'))
+      assert.equal(1, counter)
+      assert.equal(1, mlen('a'))
+      assert.equal(1, counter)
+      assert.equal(1, mlen('a'))
+      assert.equal(1, counter)
+      assert.equal(1, mlen('a'))
+      assert.equal(1, counter)
+      assert.equal(1, mlen('a'))
+      assert.equal(2, counter)
+      end)
+
+  end)
+  end)

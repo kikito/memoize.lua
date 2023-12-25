@@ -212,6 +212,23 @@ erased, but the memory storing `mf(4)` is still in use.
 
 The second parameter also allows sharing a single cache amongst two memoized functions.
 
+Optionally, the second parameter may contain a validator method for determining
+the validity of a cache entry.  When the validator returns nil or false,
+the current cache entry is discarded and a new one will be computed.
+For example, suppose that we want to declare a cache entry stale after 10
+seconds.
+
+``` lua
+local cache = {}
+function cache:validator(current_validity)
+  if current_validity == nil then
+    return os.time()
+  elseif (os.time() - current_validity) > 10 then
+    return nil
+  end
+  return current_validity
+end
+```
 
 ## Changelog
 

@@ -50,6 +50,12 @@ local function cache_get(cache, params)
     node = node.children and node.children[params[i]]
     if not node then return nil end
   end
+  if node.results and cache.validator then
+    node.validity = cache:validator(node.validity)
+    if not node.validity then
+      node.results = nil
+    end
+  end
   return node.results
 end
 
@@ -63,6 +69,9 @@ local function cache_put(cache, params, results)
     node = node.children[param]
   end
   node.results = results
+  if cache.validator then
+    node.validity = cache:validator(nil)
+  end
 end
 
 -- public function
